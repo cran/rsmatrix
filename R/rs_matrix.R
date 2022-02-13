@@ -1,21 +1,27 @@
 #---- Helper functions (internal) ----
 different_lengths <- function(...) {
   res <- lengths(list(...))
-  any(res != res[1])
+  any(res != res[1L])
 }
 
-any_NA <- function(...) {
-  res <- vapply(list(...), anyNA, logical(1))
-  any(res)
+union2 <- function(x, y) {
+  x <- unique(x)
+  y <- unique(y)
+  unique(c(as.character(x), as.character(y)))
+}
+
+any_negative <- function(...) {
+  min(..., 1, na.rm = TRUE) <= 0 # the 1 stops the warnings with length-0 inputs
 }
 
 #---- Z matrix (internal) ----
 .rs_z <- function(t2, t1, f = NULL, sparse = FALSE) {
-  lev <- sort(unique(c(as.character(t2), as.character(t1))))
+  lev <- union2(t2, t1) # usually faster than base::union()
+  lev <- lev[order(lev)]
   t2 <- factor(t2, lev)
   t1 <- factor(t1, lev)
   # something is probably wrong if t2 <= t1
-  if (any(as.numeric(t2) <= as.numeric(t1), na.rm = TRUE)) {
+  if (any_negative(as.numeric(t2) - as.numeric(t1))) {
     warning(gettext("all elements of 't2' should be greater than the corresponding elements in 't1'"))
   } 
   # make row names before interacting with f
@@ -35,7 +41,7 @@ any_NA <- function(...) {
     t1 <- interaction(f, t1)
   }
   # calculate Z
-  if (nlevels(t2) < 2) {
+  if (nlevels(t2) < 2L) {
     # return a nx1 matrix of 0's if there's only one level
     # return a 0x0 matrix if there are no levels
     z <- matrix(rep(0, length(t2)), ncol = nlevels(t2))
@@ -64,27 +70,29 @@ rs_matrix <- function(t2, t1, p2, p1, f = NULL, sparse = FALSE) {
     if (different_lengths(t2, t1, p2, p1)) {
       stop(gettext("'t2', 't1', 'p2', and 'p1' must be the same length"))
     }
-    if (any_NA(t2, t1)) {
+    if (anyNA(t2) || anyNA(t1)) {
       stop(gettext("'t2' and 't1' cannot contain NAs"))
     }
   } else {
     if (different_lengths(t2, t1, p2, p1, f)) {
       stop(gettext("'t2', 't1', 'p2', 'p1', and 'f' must be the same length"))
     }
-    if (any_NA(t2, t1, f)) {
+    if (anyNA(t2) || anyNA(t1) || anyNA(f)) {
       stop(gettext("'t2', 't1', and 'f' cannot contain NAs"))
     }
     f <- as.factor(f)
   }
   z <- .rs_z(t2, t1, f, sparse)
   # number of columns that need to be removed for base period
-  n <- max(nlevels(f), min(1, ncol(z)))
+  n <- max(nlevels(f), min(1L, ncol(z)))
   # return value
   function(matrix = c("Z", "X", "y", "Y")) {
     switch(match.arg(matrix),
            Z = z[, -seq_len(n), drop = FALSE],
            X = .rs_x(z[, -seq_len(n), drop = FALSE], p2, p1),
            y = structure(log(p2 / p1), names = rownames(z)),
+           # rowSums() gets the single value in the base period
+           # for each group
            Y = -rowSums(.rs_x(z[, seq_len(n), drop = FALSE], p2, p1)))
   }
 }
