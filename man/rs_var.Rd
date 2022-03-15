@@ -3,7 +3,7 @@
 \title{Robust variance matrix for repeat-sales indexes}
 
 \description{
-Compute a cluster-robust variance matrix for a linear regression, with or without instruments, where clustering occurs along one dimension. Useful for calculating a variance matrix when a regression is calculated manually.
+Convenience function to compute a cluster-robust variance matrix for a linear regression, with or without instruments, where clustering occurs along one dimension. Useful for calculating a variance matrix when a regression is calculated manually.
 }
 
 \usage{
@@ -17,7 +17,7 @@ rs_var(u, Z, X = Z, ids = seq_len(nrow(X)), df = NULL)
 
 \item{X}{An  \eqn{n \times k}{n x k} matrix of covariates.}
 
-\item{ids}{A factor of length \eqn{n}{n}, or something that can be coerced into one, that groups observations in \code{u}. By default each observation belongs to its own group.}
+\item{ids}{A factor of length \eqn{n}, or something that can be coerced into one, that groups observations in \code{u}. By default each observation belongs to its own group.}
 
 \item{df}{An optional degrees of freedom correction. Default is Stata's small sample degrees of freedom correction.}
 }
