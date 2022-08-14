@@ -14,8 +14,18 @@ any_negative <- function(...) {
   min(..., 1, na.rm = TRUE) <= 0 # the 1 stops the warnings with length-0 inputs
 }
 
+dense_to_sparse <- function(x) {
+  if (packageVersion("Matrix") < package_version("1.4-2")) {
+    as(x, "dgCMatrix")
+  } else {
+    as(as(as(x, "dMatrix"), "generalMatrix"), "CsparseMatrix")
+  }
+}
+
 #---- Z matrix (internal) ----
 .rs_z <- function(t2, t1, f = NULL, sparse = FALSE) {
+  # it's important to coerce t2 and t1 into characters prior to taking the union
+  # so that both dates and factors are treated the same
   lev <- union2(t2, t1) # usually faster than base::union()
   lev <- lev[order(lev)]
   t2 <- factor(t2, lev)
@@ -45,7 +55,8 @@ any_negative <- function(...) {
     # return a nx1 matrix of 0's if there's only one level
     # return a 0x0 matrix if there are no levels
     z <- matrix(rep(0, length(t2)), ncol = nlevels(t2))
-    if (sparse) z <- as(z, "dgCMatrix")
+    # from Matrix:::.as.via.virtual()
+    if (sparse) z <- dense_to_sparse(z)
   } else {
     # model matrix otherwise
     mm <- if (sparse) sparse.model.matrix else model.matrix

@@ -19,14 +19,18 @@ mats <- with(x, rs_matrix(date, date_prev, price, price_prev, sparse = TRUE))
 matg <- with(x, rs_matrix(date, date_prev, price, price_prev, id2))
 mata <- with(subset(x, id2 == "a"),
              rs_matrix(date, date_prev, price, price_prev))
+matb <- with(subset(x, id2 == "b"),
+             rs_matrix(date, date_prev, price, price_prev))
 
 b <- solve(crossprod(mat("Z")), crossprod(mat("Z"), mat("y")))
 bg <- solve(crossprod(matg("Z")), crossprod(matg("Z"), matg("y")))
 ba <- solve(crossprod(mata("Z")), crossprod(mata("Z"), mata("y")))
+bb <- solve(crossprod(matb("Z")), crossprod(matb("Z"), matb("y")))
 
 g <- solve(crossprod(mat("Z"), mat("X")), crossprod(mat("Z"), mat("Y")))
 gg <- solve(crossprod(matg("Z"), matg("X")), crossprod(matg("Z"), matg("Y")))
 ga <- solve(crossprod(mata("Z"), mata("X")), crossprod(mata("Z"), mata("Y")))
+gb <- solve(crossprod(matb("Z"), matb("X")), crossprod(matb("Z"), matb("Y")))
 
 #---- Tests for matrices ----
 identical(rsmatrix:::.rs_z(integer(0), character(0)), 
@@ -74,17 +78,17 @@ identical(rs_matrix(c(2, 4), 1:2, c(2, 5), 1:2)("Y"),
           c("1" = 1, "2" = 0))
 # tests for sparse
 identical(rsmatrix:::.rs_z(integer(0), integer(0), sparse = TRUE),
-          as(matrix(integer(0), ncol = 0), "dgCMatrix"))
+          rsmatrix:::dense_to_sparse(matrix(integer(0), ncol = 0)))
 identical(rsmatrix:::.rs_z(1, 1, sparse = TRUE),
-          as(matrix(0, ncol = 1, dimnames = list(1, 1)), "dgCMatrix"))
+          rsmatrix:::dense_to_sparse(matrix(0, ncol = 1, dimnames = list(1, 1))))
 identical(rsmatrix:::.rs_z(c(a = "a"), "a", sparse = TRUE),
-          as(matrix(0, ncol = 1, dimnames = list("a", "a")), "dgCMatrix"))
+          rsmatrix:::dense_to_sparse(matrix(0, ncol = 1, dimnames = list("a", "a"))))
 identical(rsmatrix:::.rs_z(c(2, 2), c(1, 1), c("a", "b"), TRUE),
-          as(matrix(c(-1, 0, 0, -1, 1, 0, 0, 1), ncol = 4, dimnames = list(1:2, c("a.1", "b.1", "a.2", "b.2"))), "dgCMatrix"))
+          rsmatrix:::dense_to_sparse(matrix(c(-1, 0, 0, -1, 1, 0, 0, 1), ncol = 4, dimnames = list(1:2, c("a.1", "b.1", "a.2", "b.2")))))
 identical(rsmatrix:::.rs_z(t2, t1, sparse = TRUE), 
           Matrix::Matrix(rsmatrix:::.rs_z(t2, t1), sparse = TRUE))
 identical(rs_matrix(integer(0), integer(0), integer(0), integer(0), sparse = TRUE)("X"),
-          as(matrix(double(0), ncol = 0), "dgCMatrix"))
+          rsmatrix:::dense_to_sparse(matrix(double(0), ncol = 0)))
 identical(rs_matrix(t2, t1, p2, p1, sparse = TRUE)("X"), 
           Matrix::Matrix(rs_matrix(t2, t1, p2, p1)("X"), sparse = TRUE))
 identical(rs_matrix(integer(0), integer(0), integer(0), integer(0), sparse = TRUE)("Y"),
@@ -94,6 +98,8 @@ identical(rs_matrix(c(2, 4), 1:2, c(2, 5), 1:2, sparse = TRUE)("Y"),
 # test results
 identical(as.numeric(ba[, 1]), as.numeric(bg[seq(1, 4, 2), 1]))
 identical(as.numeric(ga[, 1]), as.numeric(gg[seq(1, 4, 2), 1]))
+identical(as.numeric(bb[, 1]), as.numeric(bg[seq(2, 4, 2), 1]))
+identical(as.numeric(gb[, 1]), as.numeric(gg[seq(2, 4, 2), 1]))
 # results from lm
 all.equal(as.numeric(b), c(1.306078088475809, 0.943826746689325))
 # results from vcovHC
