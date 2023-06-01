@@ -1,8 +1,17 @@
 rs_pairs <- function(period, product) {
-  if ((n <- length(period)) != length(product)) {
-    stop(gettext("'period' and 'product' must be the same length"))
+  n <- length(period)
+
+  # != is slow for factors with many levels, so use the integer codes
+  if (is.factor(product)) {
+    attributes(product) <- NULL
   }
-  if (!n) return(integer(0L))
+  if (length(product) != n) {
+    stop("'period' and 'product' must be the same length")
+  }
+  if (n == 0L) {
+    return(integer(0L))
+  }
+
   ord <- order(product, period, na.last = NA)
   res <- rep.int(NA_integer_, n)
   # offset the period by product ordering
