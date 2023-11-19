@@ -53,6 +53,8 @@ test_that("a more complex example works", {
 
 test_that("corner cases work", {
   expect_identical(rs_pairs(numeric(0), character(0)), integer(0))
+  expect_identical(rs_pairs(1:4, rep(NA, 4)), integer(0))
+  expect_identical(rs_pairs(rep(NA, 4), 1:4), integer(0))
   expect_identical(rs_pairs(1, 1), 1L)
   expect_identical(rs_pairs(rep(1, 10), 1:10), 1:10)
   expect_identical(rs_pairs(1:10, rep(1, 10)), c(1L, 1:9))
@@ -62,8 +64,10 @@ test_that("corner cases work", {
 test_that("sales pairs are back periods", {
   period <- c(3, 3, 4, 2, 2, 1, 4, 1, 1, 3, 2, 4)
   product <- c(1, 3, 2, 3, 2, 1, 1, 2, 3, 2, 1, 3)
-  expect_equal(rs_pairs(period, product),
-               c(11, 4, 10, 9, 8, 6, 1, 8, 9, 5, 6, 2))
+  expect_equal(
+    rs_pairs(period, product),
+    c(11, 4, 10, 9, 8, 6, 1, 8, 9, 5, 6, 2)
+  )
 })
 
 test_that("different length inputs is an error", {

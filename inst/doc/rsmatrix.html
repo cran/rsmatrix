@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Making repeat-sales indexes</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Making repeat-sales indexes</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(rsmatrix)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span></code></pre></div>
+<p>The repeat-sales method is an approach to construct property price
+indexes by exploiting multiple sales for the same property over time to
+control for time-invariant differences in quality between properties. In
+practice, repeat-sales indexes come in a number of different flavors.
+There are two broad classes of repeat-sales price indexes—the geometric
+repeat-sales index (GRS index) and the arithmetic repeat-sales index
+(ARS index)—along with various weighting schemes that can be used to
+weight the prices in the index calculation. In all cases these indexes
+can be calculated as a linear estimator using a few different matrices.
+The purpose of the <em>rsmatrix</em> package is to make it easy to
+construct these matrices and compute a repeat-sales index.</p>
+<div id="some-data" class="section level2">
+<h2>Some data</h2>
+<p>Let’s start with some fictitious data on house sales for five cities
+over a ten-year period. These data won’t make an interesting price
+index, but they’re broadly representative of the type of data used to
+make a housing price index in practice.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">15243</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>periods <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fu">as.Date</span>(<span class="st">&quot;2010-01-01&quot;</span>), <span class="fu">as.Date</span>(<span class="st">&quot;2019-12-31&quot;</span>), <span class="st">&quot;day&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>prices <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="at">sale =</span> <span class="fu">sample</span>(periods, <span class="fl">5e5</span>, <span class="cn">TRUE</span>),</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">property =</span> <span class="fu">factor</span>(<span class="fu">sprintf</span>(<span class="st">&quot;%05d&quot;</span>, <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fl">5e4</span>, <span class="fl">5e5</span>, <span class="cn">TRUE</span>))),</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="at">city =</span> <span class="fu">factor</span>(<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="fl">1e5</span>, <span class="cn">TRUE</span>)),</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>  <span class="at">price =</span> <span class="fu">round</span>(<span class="fu">rlnorm</span>(<span class="fl">5e5</span>) <span class="sc">*</span> <span class="fl">5e5</span>, <span class="sc">-</span><span class="dv">3</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>)</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>prices <span class="ot">&lt;-</span> prices[<span class="fu">order</span>(prices<span class="sc">$</span>city, prices<span class="sc">$</span>property, prices<span class="sc">$</span>sale), ]</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="fu">row.names</span>(prices) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="fu">head</span>(prices)</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt;         sale property city   price</span></span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; 1 2012-11-18    00001    1 2831000</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; 2 2018-10-05    00001    1  290000</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; 3 2010-09-20    00002    1 1519000</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; 4 2019-12-19    00002    1  269000</span></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt; 5 2012-06-25    00003    1  712000</span></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt; 6 2016-10-15    00003    1  520000</span></span></code></pre></div>
+</div>
+<div id="preparing-to-make-the-matrices" class="section level2">
+<h2>Preparing to make the matrices</h2>
+<p>The repeat-sales method uses multiple sales for the same property
+over time to identify the change in housing prices. The major step to
+prepare the data for this method is to make pairs of consecutive sales
+(sales pairs). Note that this will remove the sizable chunk of
+properties for which there is only one sale.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">interaction</span>(prices<span class="sc">$</span>city, prices<span class="sc">$</span>property, <span class="at">drop =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">tabulate</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="fu">quantile</span>()</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;   0%  25%  50%  75% 100% </span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;    1    1    2    3   11</span></span></code></pre></div>
+<p>We’ll be making a monthly index, and it’s useful to turn sale dates
+into year months before constructing sales pairs. (Using, say, the
+<code>yearmon</code> class from <code>zoo</code> instead of a factor
+means this can be done after making sales pairs.)</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>prices<span class="sc">$</span>period <span class="ot">&lt;-</span> <span class="fu">cut</span>(prices<span class="sc">$</span>sale, <span class="st">&quot;month&quot;</span>)</span></code></pre></div>
+<p>The <code>rs_pairs()</code> function gives the position of the
+previous sale for each property in each city in the data.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>sales_pairs <span class="ot">&lt;-</span> <span class="fu">rs_pairs</span>(prices<span class="sc">$</span>sale, <span class="fu">interaction</span>(prices<span class="sc">$</span>city, prices<span class="sc">$</span>property))</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>prices[<span class="fu">c</span>(<span class="st">&quot;price_prev&quot;</span>, <span class="st">&quot;period_prev&quot;</span>)] <span class="ot">&lt;-</span> prices[sales_pairs, <span class="fu">c</span>(<span class="st">&quot;price&quot;</span>, <span class="st">&quot;period&quot;</span>)]</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">head</span>(prices)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt;         sale property city   price     period price_prev period_prev</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; 1 2012-11-18    00001    1 2831000 2012-11-01    2831000  2012-11-01</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; 2 2018-10-05    00001    1  290000 2018-10-01    2831000  2012-11-01</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; 3 2010-09-20    00002    1 1519000 2010-09-01    1519000  2010-09-01</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; 4 2019-12-19    00002    1  269000 2019-12-01    1519000  2010-09-01</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; 5 2012-06-25    00003    1  712000 2012-06-01     712000  2012-06-01</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; 6 2016-10-15    00003    1  520000 2016-10-01     712000  2012-06-01</span></span></code></pre></div>
+<p>Now that the data are oriented as sales pairs, we can remove pairs of
+transactions that don’t belong in the calculation. The goal is to help
+motivate the assumption that it is only time-invariant differences in
+quality that confound a change in housing prices with a change in the
+composition of housing that sells over time.</p>
+<p>It’s normal to remove pairs of transactions that are close together
+(e.g., less than two months apart), as these properties may be flips or
+the result of financial difficulty that is not indicative of what the
+property would have otherwise sold for. Note that this filters out
+properties that only sell once.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>prices<span class="sc">$</span>holding_period <span class="ot">&lt;-</span> <span class="fu">with</span>(prices, <span class="fu">as.numeric</span>(period) <span class="sc">-</span> <span class="fu">as.numeric</span>(period_prev))</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>prices <span class="ot">&lt;-</span> <span class="fu">subset</span>(prices, holding_period <span class="sc">&gt;</span> <span class="dv">2</span>)</span></code></pre></div>
+<p>Properties with a very large change in price may have undergone major
+improvements or depreciation that similarly undermine the assumptions of
+the repeat-sales method. There are many ways to try and filter out these
+transactions, but a simple approach is to remove pairs of sales where
+the monthly return for a property is greater than, say, 2.5 median
+absolute deviations from the median. (The <code>gpindex</code> package
+has several other methods for dealing with extreme changes in
+prices.)</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">library</span>(gpindex)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>monthly_return <span class="ot">&lt;-</span> <span class="fu">with</span>(prices, (price <span class="sc">/</span> price_prev)<span class="sc">^</span>(<span class="dv">1</span> <span class="sc">/</span> holding_period))</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>robust_z <span class="ot">&lt;-</span> <span class="fu">grouped</span>(robust_z)</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>prices <span class="ot">&lt;-</span> <span class="fu">subset</span>(prices, <span class="sc">!</span><span class="fu">robust_z</span>(monthly_return, <span class="at">group =</span> city))</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="fu">head</span>(prices)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt;          sale property city  price     period price_prev period_prev</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; 2  2018-10-05    00001    1 290000 2018-10-01    2831000  2012-11-01</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; 4  2019-12-19    00002    1 269000 2019-12-01    1519000  2010-09-01</span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; 6  2016-10-15    00003    1 520000 2016-10-01     712000  2012-06-01</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; 8  2011-07-18    00004    1 305000 2011-07-01      90000  2010-07-01</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; 9  2013-12-03    00004    1 768000 2013-12-01     305000  2011-07-01</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; 10 2018-08-02    00004    1 121000 2018-08-01     768000  2013-12-01</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt;    holding_period</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; 2              71</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; 4             111</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; 6              52</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; 8              12</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; 9              29</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; 10             56</span></span></code></pre></div>
+</div>
+<div id="calculating-a-repeat-sales-index" class="section level2">
+<h2>Calculating a repeat-sales index</h2>
+<p>With the data in the right form, and potentially problematic
+transactions gone, we can now make the repeat-sales matrices and
+calculate a housing price index. The strategy is to make a constructor
+function based on the sales-pair data that can be used to make the
+repeat-sales matrices. These matrices are naturally spare, and the
+volume of transactions means we’ll benefit for using sparse
+matrices.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>matrices <span class="ot">&lt;-</span> <span class="fu">with</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  prices,</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>  <span class="fu">rs_matrix</span>(period, period_prev, price, price_prev, city, <span class="at">sparse =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>)</span></code></pre></div>
+<p>The simplest repeat-sales index in the geometric repeat sales (GRS)
+index.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>
+This index uses the <span class="math inline">\(Z\)</span> and <span class="math inline">\(y\)</span> matrices.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>Z <span class="ot">&lt;-</span> <span class="fu">matrices</span>(<span class="st">&quot;Z&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">matrices</span>(<span class="st">&quot;y&quot;</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>grs <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">solve</span>(<span class="fu">crossprod</span>(Z), <span class="fu">crossprod</span>(Z, y)))</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="fu">head</span>(grs)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; 6 x 1 Matrix of class &quot;dgeMatrix&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt;                   [,1]</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; 1.2010-02-01 0.9319471</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; 2.2010-02-01 1.0682105</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt; 3.2010-02-01 1.0434833</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; 4.2010-02-01 1.0185787</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt; 5.2010-02-01 0.9715417</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt; 1.2010-03-01 1.0499673</span></span></code></pre></div>
+<p>There are various inverse-variance (or interval) weighting schemes
+found in the literature. These weights are the result of regressing the
+residuals from the GRS model against a function of the holding period.
+The most well-known of these weights, the Case-Shiller weights, model
+variance as a linear function of holding period.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>grs_resid <span class="ot">&lt;-</span> y <span class="sc">-</span> Z <span class="sc">%*%</span> <span class="fu">log</span>(grs)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>mdl <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">as.numeric</span>(grs_resid)<span class="sc">^</span><span class="dv">2</span> <span class="sc">~</span> prices<span class="sc">$</span>holding_period)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>W <span class="ot">&lt;-</span> <span class="fu">Diagonal</span>(<span class="at">x =</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">fitted.values</span>(mdl))</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>grs_cs <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">solve</span>(<span class="fu">crossprod</span>(Z, W <span class="sc">%*%</span> Z), <span class="fu">crossprod</span>(Z, W <span class="sc">%*%</span> y)))</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="fu">head</span>(grs_cs)</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; 6 x 1 Matrix of class &quot;dgeMatrix&quot;</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt;                   [,1]</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt; 1.2010-02-01 0.9216778</span></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co">#&gt; 2.2010-02-01 1.0395309</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a><span class="co">#&gt; 3.2010-02-01 1.0265610</span></span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a><span class="co">#&gt; 4.2010-02-01 0.9885539</span></span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a><span class="co">#&gt; 5.2010-02-01 0.9611430</span></span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a><span class="co">#&gt; 1.2010-03-01 1.0373087</span></span></code></pre></div>
+<p>Adding the square of the holding period to the model for the
+variance, with or without an intercept, is a common variation for the
+interval weights. These weights can all be extended to account for the
+same house selling more than twice.</p>
+<p>Another type of repeat-sales index is the arithmetic repeat sales
+(ARS) index. This index uses the <span class="math inline">\(Z\)</span>,
+<span class="math inline">\(X\)</span>, and <span class="math inline">\(Y\)</span> matrices.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">matrices</span>(<span class="st">&quot;X&quot;</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>Y <span class="ot">&lt;-</span> <span class="fu">matrices</span>(<span class="st">&quot;Y&quot;</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a>ars <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">solve</span>(<span class="fu">crossprod</span>(Z, X), <span class="fu">crossprod</span>(Z, Y))</span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="fu">head</span>(ars)</span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co">#&gt; 6 x 1 Matrix of class &quot;dgeMatrix&quot;</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="co">#&gt;                   [,1]</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="co">#&gt; 1.2010-02-01 0.9049071</span></span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="co">#&gt; 2.2010-02-01 1.1567195</span></span>
+<span id="cb11-10"><a href="#cb11-10" tabindex="-1"></a><span class="co">#&gt; 3.2010-02-01 1.0093530</span></span>
+<span id="cb11-11"><a href="#cb11-11" tabindex="-1"></a><span class="co">#&gt; 4.2010-02-01 1.0107540</span></span>
+<span id="cb11-12"><a href="#cb11-12" tabindex="-1"></a><span class="co">#&gt; 5.2010-02-01 0.9458214</span></span>
+<span id="cb11-13"><a href="#cb11-13" tabindex="-1"></a><span class="co">#&gt; 1.2010-03-01 0.9840927</span></span></code></pre></div>
+<p>Like the GRS index, the ARS index can be calculated with
+inverse-variance weights.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>ars_resid <span class="ot">&lt;-</span> Y <span class="sc">-</span> X <span class="sc">%*%</span> (<span class="dv">1</span> <span class="sc">/</span> ars)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>mdl <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">as.numeric</span>(ars_resid)<span class="sc">^</span><span class="dv">2</span> <span class="sc">~</span> prices<span class="sc">$</span>holding_period)</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>W <span class="ot">&lt;-</span> <span class="fu">Diagonal</span>(<span class="at">x =</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">fitted.values</span>(mdl))</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>ars_cs <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">solve</span>(<span class="fu">crossprod</span>(Z, W <span class="sc">%*%</span> X), <span class="fu">crossprod</span>(Z, W <span class="sc">%*%</span> Y))</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="fu">head</span>(ars_cs)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="co">#&gt; 6 x 1 Matrix of class &quot;dgeMatrix&quot;</span></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a><span class="co">#&gt;                   [,1]</span></span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a><span class="co">#&gt; 1.2010-02-01 0.9040179</span></span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="co">#&gt; 2.2010-02-01 1.1194659</span></span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a><span class="co">#&gt; 3.2010-02-01 0.9667189</span></span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a><span class="co">#&gt; 4.2010-02-01 0.9549480</span></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="co">#&gt; 5.2010-02-01 0.9161033</span></span>
+<span id="cb12-15"><a href="#cb12-15" tabindex="-1"></a><span class="co">#&gt; 1.2010-03-01 0.9856805</span></span></code></pre></div>
+<p>Dividing the <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> matrices by the price of the first sale
+for each row produces an equally-weighted arithmetic index (as opposed
+to value-weighted index).</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>ars_ew <span class="ot">&lt;-</span> <span class="fu">with</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  prices,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="dv">1</span> <span class="sc">/</span> <span class="fu">solve</span>(<span class="fu">crossprod</span>(Z, X <span class="sc">/</span> price_prev), <span class="fu">crossprod</span>(Z, Y <span class="sc">/</span> price_prev))</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>)</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="fu">head</span>(ars_ew)</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt; 6 x 1 Matrix of class &quot;dgeMatrix&quot;</span></span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="co">#&gt;                   [,1]</span></span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="co">#&gt; 1.2010-02-01 0.9831875</span></span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a><span class="co">#&gt; 2.2010-02-01 1.1454796</span></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a><span class="co">#&gt; 3.2010-02-01 1.1332362</span></span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a><span class="co">#&gt; 4.2010-02-01 0.9957358</span></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a><span class="co">#&gt; 5.2010-02-01 0.8859613</span></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a><span class="co">#&gt; 1.2010-03-01 0.9510087</span></span></code></pre></div>
+<p>Once the index is calculated, it’s often easier to turn into a
+matrix-like object with cities are rows and time periods as columns. The
+easiest way to do this is with <strong>piar</strong>.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="fu">library</span>(piar)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a>dimensions <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">strsplit</span>(<span class="fu">rownames</span>(grs), <span class="st">&quot;.&quot;</span>, <span class="at">fixed =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>grs_piar <span class="ot">&lt;-</span> <span class="fu">elemental_index</span>(grs, dimensions[, <span class="dv">2</span>], dimensions[, <span class="dv">1</span>],</span>
+<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a>  <span class="at">chainable =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-6"><a href="#cb14-6" tabindex="-1"></a>)</span>
+<span id="cb14-7"><a href="#cb14-7" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" tabindex="-1"></a><span class="fu">head</span>(grs_piar, <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">5</span>))</span>
+<span id="cb14-9"><a href="#cb14-9" tabindex="-1"></a><span class="co">#&gt; Fixed-base price index for 5 levels over 5 time periods </span></span>
+<span id="cb14-10"><a href="#cb14-10" tabindex="-1"></a><span class="co">#&gt;   2010-02-01 2010-03-01 2010-04-01 2010-05-01 2010-06-01</span></span>
+<span id="cb14-11"><a href="#cb14-11" tabindex="-1"></a><span class="co">#&gt; 1  0.9319471   1.049967  1.0312130  0.9332345  1.0074811</span></span>
+<span id="cb14-12"><a href="#cb14-12" tabindex="-1"></a><span class="co">#&gt; 2  1.0682105   0.984812  1.0840525  1.0113186  0.9645851</span></span>
+<span id="cb14-13"><a href="#cb14-13" tabindex="-1"></a><span class="co">#&gt; 3  1.0434833   1.044671  0.9526141  0.9330665  1.0234300</span></span>
+<span id="cb14-14"><a href="#cb14-14" tabindex="-1"></a><span class="co">#&gt; 4  1.0185787   1.048738  1.0757727  1.1258297  1.0099260</span></span>
+<span id="cb14-15"><a href="#cb14-15" tabindex="-1"></a><span class="co">#&gt; 5  0.9715417   1.025133  1.0648382  1.0387825  1.0930171</span></span></code></pre></div>
+</div>
+<div id="sales-pair-contributions" class="section level2">
+<h2>Sales pair contributions</h2>
+<p>Repeat-sales indexes have a simple interpretation as a type of
+efficient back-price imputation. It’s best to include the base period of
+the index prior to doing such an imputation.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>grs <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="dv">1</span>, <span class="dv">5</span>), <span class="fu">paste</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="st">&quot;2010-01-01&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;.&quot;</span>)), grs[, <span class="dv">1</span>])</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>ars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="dv">1</span>, <span class="dv">5</span>), <span class="fu">paste</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="st">&quot;2010-01-01&quot;</span>, <span class="at">sep =</span> <span class="st">&quot;.&quot;</span>)), ars[, <span class="dv">1</span>])</span></code></pre></div>
+<p>The GRS index at a point in time is simply the geometric mean of
+imputed price relatives. This makes it easy to calculate the
+percent-change contribution of each property at each point in time.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>grs_contributions <span class="ot">&lt;-</span> <span class="fu">Map</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  \(df, df_prev) {</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a>    impute_back <span class="ot">&lt;-</span> <span class="fu">with</span>(df, price_prev <span class="sc">/</span> grs[<span class="fu">paste</span>(city, period_prev, <span class="at">sep =</span> <span class="st">&quot;.&quot;</span>)])</span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a>    <span class="fu">names</span>(impute_back) <span class="ot">&lt;-</span> <span class="fu">row.names</span>(df)</span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a>    impute_forward <span class="ot">&lt;-</span> <span class="fu">with</span>(df_prev, price <span class="sc">/</span> grs[<span class="fu">paste</span>(city, period, <span class="at">sep =</span> <span class="st">&quot;.&quot;</span>)])</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>    <span class="fu">names</span>(impute_forward) <span class="ot">&lt;-</span> <span class="fu">row.names</span>(df_prev)</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>    <span class="fu">geometric_contributions</span>(</span>
+<span id="cb16-8"><a href="#cb16-8" tabindex="-1"></a>      <span class="fu">c</span>(df<span class="sc">$</span>price <span class="sc">/</span> impute_back, df_prev<span class="sc">$</span>price_prev <span class="sc">/</span> impute_forward)</span>
+<span id="cb16-9"><a href="#cb16-9" tabindex="-1"></a>    )</span>
+<span id="cb16-10"><a href="#cb16-10" tabindex="-1"></a>  },</span>
+<span id="cb16-11"><a href="#cb16-11" tabindex="-1"></a>  <span class="fu">split</span>(prices, <span class="fu">interaction</span>(prices<span class="sc">$</span>city, prices<span class="sc">$</span>period)),</span>
+<span id="cb16-12"><a href="#cb16-12" tabindex="-1"></a>  <span class="fu">split</span>(prices, <span class="fu">interaction</span>(prices<span class="sc">$</span>city, prices<span class="sc">$</span>period_prev))</span>
+<span id="cb16-13"><a href="#cb16-13" tabindex="-1"></a>)</span>
+<span id="cb16-14"><a href="#cb16-14" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">sapply</span>(grs_contributions, sum) <span class="sc">+</span> <span class="dv">1</span>, grs)</span>
+<span id="cb16-16"><a href="#cb16-16" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb16-17"><a href="#cb16-17" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" tabindex="-1"></a><span class="fu">range</span>(<span class="fu">unlist</span>(grs_contributions))</span>
+<span id="cb16-19"><a href="#cb16-19" tabindex="-1"></a><span class="co">#&gt; [1] -0.008215347  0.009111019</span></span></code></pre></div>
+<p>The same applies to the ARS index, noting that it is a weighted
+arithmetic mean of imputed price relatives.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>ars_contributions <span class="ot">&lt;-</span> <span class="fu">Map</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>  \(df, df_prev) {</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>    impute_back <span class="ot">&lt;-</span> <span class="fu">with</span>(df, price_prev <span class="sc">/</span> ars[<span class="fu">paste</span>(city, period_prev, <span class="at">sep =</span> <span class="st">&quot;.&quot;</span>)])</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a>    <span class="fu">names</span>(impute_back) <span class="ot">&lt;-</span> <span class="fu">row.names</span>(df)</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>    impute_forward <span class="ot">&lt;-</span> <span class="fu">with</span>(df_prev, price <span class="sc">/</span> ars[<span class="fu">paste</span>(city, period, <span class="at">sep =</span> <span class="st">&quot;.&quot;</span>)])</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>    <span class="fu">names</span>(impute_forward) <span class="ot">&lt;-</span> <span class="fu">row.names</span>(df_prev)</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a>    <span class="fu">arithmetic_contributions</span>(</span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a>      <span class="fu">c</span>(df<span class="sc">$</span>price <span class="sc">/</span> impute_back, df_prev<span class="sc">$</span>price_prev <span class="sc">/</span> impute_forward),</span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>      <span class="fu">c</span>(impute_back, impute_forward)</span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>    )</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a>  },</span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a>  <span class="fu">split</span>(prices, <span class="fu">interaction</span>(prices<span class="sc">$</span>city, prices<span class="sc">$</span>period)),</span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a>  <span class="fu">split</span>(prices, <span class="fu">interaction</span>(prices<span class="sc">$</span>city, prices<span class="sc">$</span>period_prev))</span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a>)</span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a></span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a><span class="fu">all.equal</span>(<span class="fu">sapply</span>(ars_contributions, sum) <span class="sc">+</span> <span class="dv">1</span>, ars)</span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a><span class="co">#&gt; [1] TRUE</span></span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a></span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="fu">range</span>(<span class="fu">unlist</span>(ars_contributions))</span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="co">#&gt; [1] -0.07041332  0.08316015</span></span></code></pre></div>
+</div>
+<div class="footnotes footnotes-end-of-document">
+<hr />
+<ol>
+<li id="fn1"><p>The GRS index is simply the first-difference estimator
+for the linear model of log price with property fixed effects. This is
+easy enough to compute with a panel-data package like <code>plm</code>,
+but the repeat-sales matrices are more convenient when working with
+sales pairs.<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

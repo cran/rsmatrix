@@ -1,3 +1,9 @@
+## Changes in version 0.2.8
+
+- Added a vignette.
+
+- `rs_matrix()` is about twice as fast now.
+
 ## Changes in version 0.2.6
 
 - Updated to work with Matrix >= 1.5-0.
