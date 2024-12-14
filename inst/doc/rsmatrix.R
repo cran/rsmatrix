@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -103,7 +103,10 @@ head(ars_ew)
 library(piar)
 
 dimensions <- do.call(rbind, strsplit(rownames(grs), ".", fixed = TRUE))
-grs_piar <- elemental_index(grs, dimensions[, 2], dimensions[, 1],
+grs_piar <- elemental_index(
+  grs,
+  period = dimensions[, 2],
+  ea = dimensions[, 1],
   chainable = FALSE
 )
 
@@ -113,7 +116,7 @@ head(grs_piar, c(5, 5))
 grs <- c(setNames(rep(1, 5), paste(1:5, "2010-01-01", sep = ".")), grs[, 1])
 ars <- c(setNames(rep(1, 5), paste(1:5, "2010-01-01", sep = ".")), ars[, 1])
 
-## ---- contrib_grs-------------------------------------------------------------
+## ----contrib_grs--------------------------------------------------------------
 grs_contributions <- Map(
   \(df, df_prev) {
     impute_back <- with(df, price_prev / grs[paste(city, period_prev, sep = ".")])
@@ -132,7 +135,7 @@ all.equal(sapply(grs_contributions, sum) + 1, grs)
 
 range(unlist(grs_contributions))
 
-## ---- contrib_ars-------------------------------------------------------------
+## ----contrib_ars--------------------------------------------------------------
 ars_contributions <- Map(
   \(df, df_prev) {
     impute_back <- with(df, price_prev / ars[paste(city, period_prev, sep = ".")])
